@@ -1,0 +1,191 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-tr.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8"></meta>
+<style>
+.square{
+	border:1px solid #eee;
+	width:20px;
+	height:20px;
+	text-align:center;
+	background-color:#fff;
+	
+	cursor:pointer;
+}
+.squareb{
+	border:1px solid #eee;
+	width:20px;
+	height:20px;
+	text-align:center;
+	background-color:#eef;
+	cursor:pointer;
+}
+.square:hover{
+	border:1px solid #66f;
+	
+}
+.squareb:hover{
+	border:1px solid #66f;
+	
+}
+#mainTable{
+	 cursor:pointer;
+	 width:auto;
+	 height:auto;
+	 display:block;
+	 float:left;
+}
+.block{
+	font-weight:bold;
+	color:#019;
+}
+.chat{
+
+	 display:block;
+	 float:left;
+}
+</style>
+ <style>
+        * { font-family:tahoma; font-size:12px; padding:0px; margin:0px; }
+        p { line-height:18px; }
+        section { width:490px; margin-left:auto; margin-right:auto;}
+        section:first-of-type { padding:5px; background:#ddd; border-radius:5px;
+                   border:1px solid #CCC; margin-top:10px; overflow:hidden; position:relative; }
+        #input { border-radius:2px; border:1px solid #ccc;
+                 margin-top:10px; padding:5px; width:390px;  }
+        #status { width:88px; display:block; float:left; margin-top:15px; }
+        
+        
+        section:first-of-type {  }
+        .viewport { z-index:1; overflow: hidden; position: relative; height:260px; }
+		.overview { list-style:none; position:absolute; left:0; top:0; /*width:100%;*/ }
+		.scrollbar { position:absolute; left:490px; }
+		div.hover .thumb { background-color:#C9E8ED !important; opacity:1 !important; }
+		.track { z-index:2; position: relative; }
+		.thumb { /*display:none;*/ opacity:0.2; cursor:pointer; overflow:hidden; position:absolute; top:0; left:0; border-radius:7px; background-color:black; }
+		.thumb:hover { background-color:#98D1DC !important; opacity:1 !important; }
+		.thumb .end { overflow:hidden; height:5px; width:7px; }
+		.disable { display:none !important; }
+		.disable * { display:none; }
+        </style>
+<body>
+	<div class="chat">
+		<section>
+		<div class="scrollbar">
+			<div class="track">
+				<div class="thumb">
+					<div class="end"></div>
+				</div>
+			</div>
+		</div>
+		<div class="viewport">
+			<div class="overview" id="content"></div>
+		</div>
+		</section>
+
+		<section> <span id="status">Conectando...</span> <input
+			type="text" id="input" disabled="disabled" /> </section>
+	</div>
+</body>
+<script src="jquery-1.8.3.js"></script>
+<!-- <script type="text/javascript" src="logic.js"></script>-->
+
+
+<script type="text/javascript" >
+	var connection = null;
+	function generateScene(){
+		body = document.getElementsByTagName('BODY');
+		div0 = document.createElement("DIV");
+		div0.setAttribute("id","mainTable");
+		for(i=0;i<9;i++){
+			div = document.createElement("DIV");
+			for(j=0;j<9;j++){
+				var inp = document.createElement("input");
+				inp.setAttribute("maxlength","1");
+				inp.className = "square"; 
+				div.appendChild(inp);
+			}
+			div0.appendChild(div);
+		}		
+		body[0].appendChild(div0);
+	}
+	
+	function generateScene2(blockFull){
+		body = document.getElementsByTagName('BODY');
+		div0 = document.createElement("DIV");
+		div0.setAttribute("id","mainTable");
+		//var alt = 0;
+		for(i=0;i<9;i++){
+			div = document.createElement("DIV");
+			for(j=0;j<9;j++){
+				var inp = document.createElement("input");
+				inp.setAttribute("maxlength","1");
+				inp.setAttribute("value",blockFull[i][j]==0?'':blockFull[i][j]);
+				inp.setAttribute("id","inp-"+ i +"-"+ j +"");
+	
+				if ((j>2 && j<6) || (i>2 && i<6)) inp.className = " squareb";
+				else inp.className = " square"; 
+				if ((j>2 && j<6) && (i>2 && i<6)) inp.className = " square";
+				
+				if (!blockFull[i][j]==0){
+					inp.setAttribute("disabled","disabled");
+					inp.className += " block";
+				}
+				div.appendChild(inp);
+			}
+			div0.appendChild(div);
+		}
+		body[0].appendChild(div0);
+		$('#mainTable').hide();
+		$('#mainTable input').keyup(function(e) {
+
+			$(this).val( parseInt($(this).val())>=0?$(this).val():'' );
+	       // if (e.keyCode === 13) {
+				var msgtext = $(this).val();
+				var id = $(this).attr('id');
+				var d = id.split('-');
+				var posV = d[1];
+				var posH = d[2];
+				var msg = {
+						type:"set",
+						i:posV,
+						j:posH,
+						val:msgtext
+				}
+				var msgs = JSON.stringify(msg);
+	            connection.send(msgs);
+	        //}
+		});
+		$('#mainTable input').click(function() {
+		            this.select();
+		    });
+		/*$('#mainTable input').focus(function() {
+            this.select();
+    	});*/
+	/*	$('#mainTable input').blur(function() {
+			$(this).val( parseInt($(this).val())>=0?$(this).val():'' );
+    	});*/
+	}
+	function updateScene(blockFull){
+		//$('#mainTable input').attr("disabled",false);
+		
+		inp = $('#mainTable input');
+		for(var i=0;i<9;i++){
+			for(var j=0;j<9;j++){
+				inp[(i)*9+j].value = blockFull[i][j]==0?' ':blockFull[i][j];
+				//$(inp[(i+1)*(j)]).val('1');
+			}
+		}
+		//$('.block').attr("disabled",true);
+	}
+	//show(blockh);
+	/*
+	save();
+	var blockF = hide();
+	//show(blockh);
+	generateScene2(blockF);
+	*/
+</script>
+<script src="frontend.js"></script>
+<script src="jquery.tinyscrollbar.js"></script>
+</html>
+
